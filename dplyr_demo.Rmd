@@ -1,0 +1,89 @@
+---
+title: "dplyr_demo"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+#find this script at github.com/frdowdy/dplyr_demo
+#setup
+install.packages("tidyverse")
+require(tidyverse)
+
+#dplyr coding
+x<-c(1:5)
+y<-rep(x,each=3,times=4)
+z<-sin(y)
+plot(z)
+#vs
+plot(sin(rep(c(1:5),each=3,times=4)))
+#vs
+c(1:5) %>% rep(each=3, times=4)  %>%  sin  %>%  plot
+rm(x,y,z)
+```
+
+```{r}
+#get data
+iris
+data<-as_tibble(iris)
+data
+data %>% head #first 6 rows
+data %>% tail #last 6 rows
+data %>% filter(Species == "versicolor")
+data %>% View
+```
+
+```{r}
+#histogram
+data %>% select(Sepal.Length) %>% qplot
+
+#multiple histograms
+data %>% select(-Species) %>% gather %>% 
+  qplot(value,data=.)+facet_wrap(~key)
+
+#plot by species
+data %>% select(Sepal.Length,Species) %>% 
+  qplot(x = Species, y = Sepal.Length, data = .)
+
+#plot by species and attribute
+data %>% gather(key = flower_att, value = measurement, -Species) %>% 
+  qplot(x = Species,y = measurement,data=.)+facet_wrap(~flower_att)
+  
+```
+
+```{r}
+#preliminary analysis
+data %>% group_by(Species) %>% 
+  summarise_all(mean)
+
+#anova
+data %>% aov(Sepal.Width~Species,.) %>% summary
+data %>% aov(Sepal.Width~Species,.) %>% TukeyHSD
+data %>% gather(key = flower_att, value = measurement, -Species) %>% 
+  group_by(flower_att) %>% do(fitVariable = aov(measurement ~ Species, data = .)) -> dfVariable
+
+# get the coefficients by group in a tidy data_frame
+install.packages("broom")
+require(broom)
+dfVariableCoef = tidy(dfVariable, fitVariable)
+dfVariableCoef
+
+# get the predictions by group in a tidy data_frame 
+dfVariablePred = augment(dfVariable,fitVariable)
+dfVariablePred
+
+# get the summary statistics by group in a tidy data_frame
+dfVariableSumm = glance(dfVariable, fitVariable)
+dfVariableSumm
+```
+
+```{r}
+#multivariate analysis and plotting to be continued
+
+
+#lda to be continued
+```
+
